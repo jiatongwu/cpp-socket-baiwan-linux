@@ -34,8 +34,8 @@ std::vector<SOCKET> g_clients;
 
 struct DataHeader
 {
-  int dataLength;//????
-  int cmd;//??
+  int dataLength;//数据长度
+  int cmd;//命令
 };
 struct Login : public DataHeader
 {
@@ -93,15 +93,15 @@ int process(SOCKET client_socket)
   char recvBuffer[4096];
   DataHeader* header;
 
-  //5.???????????
-  int nLen = recv(client_socket, recvBuffer, sizeof(DataHeader), 0);
+  //5.
+   int nLen = recv(client_socket, recvBuffer, sizeof(DataHeader), 0);
   if (nLen <= 0)
     {
-      std::cout << "??????"<<client_socket<<"?????????0" << std::endl;
+      std::cout << "接收到的数据小于等于0  "<<client_socket << std::endl;
       return -1;
     }
   header = (DataHeader*)recvBuffer;
-  std::cout << "?????" << client_socket << "?? cmd:" << header->cmd << " dataLength:" << header->dataLength << std::endl;
+  std::cout << "接收到来自： " << client_socket << "命令 cmd:" << header->cmd << " dataLength:" << header->dataLength << std::endl;
   switch (header->cmd)
     {
     case CMD_LOGIN:
@@ -109,12 +109,11 @@ int process(SOCKET client_socket)
         Login* login;
         recv(client_socket, recvBuffer + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
         login = (Login*)recvBuffer;
-        std::cout << "?????" << client_socket << "?? ????:  username: " << login->username << " password " << login->password << std::endl;
-        //?????login??????????????
-        //do something
+        std::cout << "接收到来自：" << client_socket << "用户名:  username: " << login->username << " password " << login->password << std::endl;
+
 
         LoginResult loginResult;
-        //????
+
         send(client_socket, (const char*)&loginResult, sizeof(LoginResult), 0);
         break;
       }
@@ -123,12 +122,11 @@ int process(SOCKET client_socket)
         Logout* logout;
         recv(client_socket, recvBuffer + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
         logout = (Logout*)recvBuffer;
-        std::cout << "?????" << client_socket << "?? ????: username: " << logout->username << std::endl;
-        //?????logout??????????????
-        //do something
+        std::cout << "接收到来自：" << client_socket << "logout消息用户名: username: " << logout->username << std::endl;
+
 
         LogoutResult logoutResult;
-        //????
+
         send(client_socket, (const char*)&logoutResult, sizeof(LogoutResult), 0);
         break;
       }
@@ -142,20 +140,7 @@ int process(SOCKET client_socket)
       }
     }
   return 0;
-  /*
-    //6.??????????
-    if (0 == strcmp(recvBuffer, "getInfo"))
-    {
-        DataPackage info = {20,"??"};
-        //????????
-        send(client_socket,(const char*)&info ,sizeof(DataPackage), 0);
-	}else
-    {
-        char msgBuffer[] = "hello world!";
-        //????????
-        send(client_socket, msgBuffer, strlen(msgBuffer) + 1, 0);
-    }
-  */
+
 }
 int main()
 {
@@ -166,10 +151,10 @@ int main()
 #endif
 
   ///
-  //1.?? socket
+  //1. socket
   SOCKET _sock=socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-  //2.bind??? IP PORT
+  //2.bind IP PORT
   sockaddr_in _in;
   _in.sin_family = AF_INET;
   _in.sin_port =htons( 4567);
@@ -180,23 +165,23 @@ int main()
 #endif
   if (SOCKET_ERROR== bind(_sock, (sockaddr*)&_in, sizeof(_in)))
     {
-      std::cout<<"????????"<<std::endl;
+      std::cout<<"绑定服务器socket失败"<<std::endl;
       return -1;
     }
   else
     {
-      std::cout << "????????" << std::endl;
+      std::cout << "绑定服务器socket成功" << std::endl;
     }
 
   //3.listen
   if (SOCKET_ERROR == listen(_sock, 5))
     {
-      std::cout << "listen??" << std::endl;
+      std::cout << "listen failed" << std::endl;
       return -1;
     }
   else
     {
-      std::cout << "listen??" << std::endl;
+      std::cout << "listen success" << std::endl;
     }
 
 
@@ -232,7 +217,7 @@ SOCKET maxSock=_sock;
       int ret=select(maxSock+1,&fdRead,&fdWrite,&fdExp,&t);
       if (ret < 0)
         {
-	  std::cout<<"select???????"<<std::endl;
+	  std::cout<<"select返回－1 失败 "<<std::endl;
 	  break;
         }
       if (FD_ISSET(_sock, &fdRead))
@@ -241,7 +226,7 @@ SOCKET maxSock=_sock;
 	  FD_CLR(_sock, &fdRead);
 	  sockaddr_in clientAddr;
 	  int clientAddrLength = sizeof(clientAddr);
-	  //4.?????????
+	  //4.
 	  SOCKET client_socket = INVALID_SOCKET;
 #ifdef _WIN32
 	  if ((client_socket = accept(_sock, (sockaddr*)&clientAddr, &clientAddrLength)) == INVALID_SOCKET)
@@ -249,13 +234,13 @@ SOCKET maxSock=_sock;
 	  if ((client_socket = accept(_sock, (sockaddr*)&clientAddr,(socklen_t*) &clientAddrLength)) == INVALID_SOCKET)
 #endif
             {
-	      std::cout << "?????socket??" << std::endl;
+	      std::cout << "accept 接收到一个无效的socket" << std::endl;
 	      //return -1;
             }
 	  else {
-	    std::cout << "????" << client_socket << "?? ?" << inet_ntoa(clientAddr.sin_addr) << ":" << clientAddr.sin_port << std::endl;
+	    std::cout << "接收到socket:" << client_socket << " ip : " << inet_ntoa(clientAddr.sin_addr) << ":" << clientAddr.sin_port << std::endl;
 
-	    //????????
+	    //
 	    for (int n = (int)g_clients.size() - 1; n >= 0; n--)
 	      {
 		NewUserJoin newUserJoin;
@@ -295,13 +280,13 @@ SOCKET maxSock=_sock;
             }
 
 	    }*/
-      //std::cout<<"??????????"<<std::endl;
+
 
 
     }
 
 #ifdef _WIN32
-  //6.?????socket
+
   closesocket(_sock);
 
 
@@ -313,6 +298,6 @@ SOCKET maxSock=_sock;
 #endif
 
 
-  std::cout<<"?????"<<std::endl;
+  std::cout<<"服务器退出"<<std::endl;
   return 0;
 }
