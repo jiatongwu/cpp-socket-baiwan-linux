@@ -97,7 +97,7 @@ int process(SOCKET client_socket)
    int nLen = recv(client_socket, recvBuffer, sizeof(DataHeader), 0);
   if (nLen <= 0)
     {
-      std::cout << "接收到的数据小于等于0  "<<client_socket << std::endl;
+      std::cout << "接收到的数据小于等于0  "<<client_socket << " 客户端退出"<<std::endl;
       return -1;
     }
   header = (DataHeader*)recvBuffer;
