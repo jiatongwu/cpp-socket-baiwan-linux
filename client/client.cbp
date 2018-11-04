@@ -12,6 +12,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-std=c++11" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
@@ -31,6 +32,9 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="EasyTcpClient.hpp" />
+		<Unit filename="MessageHeader.hpp" />
+		<Unit filename="client.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />
