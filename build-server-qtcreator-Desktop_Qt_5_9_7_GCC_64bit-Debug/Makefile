@@ -213,6 +213,7 @@ DIST          = ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/spec_pre.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/qt_config.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/linux-g++/qmake.conf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/spec_post.prf \
+		../server-qtcreator/.qmake.stash \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/exclusive_builds.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/toolchain.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/default_pre.prf \
@@ -231,7 +232,8 @@ DIST          = ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/spec_pre.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/exceptions.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/yacc.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/lex.prf \
-		../server-qtcreator/server-qtcreator.pro  ../server-qtcreator/server.cpp
+		../server-qtcreator/server-qtcreator.pro ../server-qtcreator/MessageHeader.hpp \
+		../server-qtcreator/EasyTcpServer.hpp ../server-qtcreator/server.cpp
 QMAKE_TARGET  = server-qtcreator
 DESTDIR       = 
 TARGET        = server-qtcreator
@@ -404,6 +406,7 @@ Makefile: ../server-qtcreator/server-qtcreator.pro ../../Qt5.9.7/5.9.7/gcc_64/mk
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/qt_config.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/linux-g++/qmake.conf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/exclusive_builds.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/toolchain.prf \
 		../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/default_pre.prf \
@@ -587,6 +590,7 @@ Makefile: ../server-qtcreator/server-qtcreator.pro ../../Qt5.9.7/5.9.7/gcc_64/mk
 ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/qt_config.prf:
 ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/linux-g++/qmake.conf:
 ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/exclusive_builds.prf:
 ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/toolchain.prf:
 ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/default_pre.prf:
@@ -623,6 +627,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../Qt5.9.7/5.9.7/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../server-qtcreator/MessageHeader.hpp ../server-qtcreator/EasyTcpServer.hpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../server-qtcreator/server.cpp $(DISTDIR)/
 
 
@@ -669,7 +674,8 @@ compiler_clean: compiler_moc_predefs_clean
 
 ####### Compile
 
-server.o: ../server-qtcreator/server.cpp 
+server.o: ../server-qtcreator/server.cpp ../server-qtcreator/EasyTcpServer.hpp \
+		../server-qtcreator/MessageHeader.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o server.o ../server-qtcreator/server.cpp
 
 ####### Install

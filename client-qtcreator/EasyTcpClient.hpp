@@ -1,10 +1,11 @@
 #ifndef _EasyTcpClient_hpp_
 #define  _EasyTcpClient_hpp_
+
+
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define  _WINSOCK_DEPRECATED_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
-
-#ifdef _WIN32
 #include <windows.h>
 #include <WinSock2.h>
 #else
@@ -66,7 +67,7 @@ public:
 
     }
     //
-    int connectServer(char* ip,unsigned short port)
+    int connectServer(const char* ip,unsigned short port)
     {
         int ret = -1;
         if (INVALID_SOCKET == _sock)
@@ -108,6 +109,7 @@ public:
 #else
             close(_sock);
 #endif
+            _sock = INVALID_SOCKET;
             cout << "close socket" << endl;
         }
 
@@ -125,11 +127,12 @@ public:
             FD_ZERO(&fdReads);
 
             FD_SET(_sock, &fdReads);
-            timeval t = {1,0};
+            timeval t = {4,0};
             int ret = select(_sock+1, &fdReads, NULL, NULL,&t);
             if (ret < 0)
             {
                 cout<<"select return <0   "<<endl;
+
                  _sock = INVALID_SOCKET;
                 return false;
             }
@@ -138,6 +141,7 @@ public:
                 FD_CLR(_sock,&fdReads);
                 if (-1 == recvData())
                 {
+                    closeSocket();
                     cout<<" 接收数据时，返回－1 "<<endl;
                     return false;
                 }

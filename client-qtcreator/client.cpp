@@ -1,8 +1,9 @@
+
+
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define  _WINSOCK_DEPRECATED_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
-
-#ifdef _WIN32
 #include <windows.h>
 #include <WinSock2.h>
 #else
@@ -65,17 +66,28 @@ void cmdThread(EasyTcpClient *client1)
 int main()
 {
     EasyTcpClient client1;
-
     client1.connectServer("192.168.12.1",4567);
+
+   // EasyTcpClient client2;
+    //client2.connectServer("192.168.12.1",4568);
 
     thread t1(cmdThread, &client1);
     t1.detach();
 
+  //  thread t2(cmdThread, &client2);
+    //t2.detach();
+    Logout logout;
+    strcpy(logout.username, "wu");
     while (client1.isRun())
     {
+       // client1.sendData(&logout);
+        //client2.sendData(&logout);
+
         client1.onRun();
+        //client2.onRun();
     }
 
     client1.closeSocket();
+    //client2.closeSocket();
     return 0;
 }
