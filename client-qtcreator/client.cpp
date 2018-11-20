@@ -27,6 +27,10 @@ void cmdThread(EasyTcpClient *client1)
     while (true)
     {
 
+
+
+
+
         //3.
         cin >> cmdBuffer;
         //4.
@@ -66,13 +70,15 @@ void cmdThread(EasyTcpClient *client1)
 int main()
 {
     EasyTcpClient client1;
-    client1.connectServer("192.168.12.1",4567);
+    client1.connectServer("192.168.2.18",4567);
 
    // EasyTcpClient client2;
     //client2.connectServer("192.168.12.1",4568);
 
-    thread t1(cmdThread, &client1);
-    t1.detach();
+    // thread t1(cmdThread, &client1);
+    //t1.detach();
+
+
 
   //  thread t2(cmdThread, &client2);
     //t2.detach();
@@ -84,6 +90,7 @@ int main()
         //client2.sendData(&logout);
 
         client1.onRun();
+        client1.sendData(&logout);
         //client2.onRun();
     }
 

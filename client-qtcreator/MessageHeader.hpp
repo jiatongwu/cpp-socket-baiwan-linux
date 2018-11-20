@@ -65,5 +65,6 @@ struct LogoutResult : public DataHeader
         result = 0;
     }
     int result;
+    char data[1024];
 };
 #endif

@@ -127,13 +127,13 @@ public:
             FD_ZERO(&fdReads);
 
             FD_SET(_sock, &fdReads);
-            timeval t = {4,0};
+            timeval t = {0,0};
             int ret = select(_sock+1, &fdReads, NULL, NULL,&t);
             if (ret < 0)
             {
                 cout<<"select return <0   "<<endl;
 
-                 _sock = INVALID_SOCKET;
+                _sock = INVALID_SOCKET;
                 return false;
             }
             if (FD_ISSET(_sock, &fdReads))
@@ -153,22 +153,46 @@ public:
 
     }
     //处理粘包 半包
+#define RECV_BUFFER_SIZE 10240
+    //recv buffer
+    char _recvBuffer[RECV_BUFFER_SIZE]={};
+    //message buffer
+    char _messageBuffer[RECV_BUFFER_SIZE*10]={};
+    int _lastPos=0;
     int recvData()
     {
-        char recvBuffer[4096];
-        DataHeader* header;
 
-
-        int nLen = recv(_sock, recvBuffer, sizeof(DataHeader), 0);
+        // DataHeader* header;
+        //copy recv buffer to message buffer
+        int nLen = recv(_sock, _recvBuffer,RECV_BUFFER_SIZE, 0);
         if (nLen <= 0)
         {
             cout << "接收到的数据<=0 " << endl;
             return -1;
         }
-        header = (DataHeader*)recvBuffer;
-        cout << "接收到 cmd:" << header->cmd << " dataLength:" << header->dataLength << endl;
-        recv(_sock, recvBuffer + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
-        onNetMessage( header);
+        memcpy(_messageBuffer+_lastPos,_recvBuffer,nLen);
+        _lastPos+=nLen;
+
+        //test message buffer while has a message enough
+        while(_lastPos>=sizeof(DataHeader))
+        {
+            DataHeader* dataHeader=(DataHeader*)_messageBuffer;
+            if(_lastPos>=dataHeader->dataLength)
+            {
+                // process the enough message and change new message buffer and _lastPos
+                int newLastPos=_lastPos-dataHeader->dataLength;
+                onNetMessage(dataHeader);
+                memcpy(_messageBuffer,_messageBuffer+dataHeader->dataLength,newLastPos);
+                _lastPos=newLastPos;
+            }else
+            {
+                break;
+            }
+        }
+
+
+
+        return 0;
     }
     void onNetMessage(DataHeader* header)
     {
@@ -180,7 +204,7 @@ public:
             LoginResult* loginResult=NULL;
 
             loginResult = (LoginResult*)header;
-            cout << "接收到logoutResult: " << loginResult ->result<< endl;
+           // cout << "接收到logoutResult: " << loginResult ->result<< endl;
 
             break;
         }
@@ -188,7 +212,7 @@ public:
         {
             LogoutResult* logoutResult=NULL;
             logoutResult = (LogoutResult*)header;
-            cout << "接收到logoutResult:" << logoutResult->result << endl;
+           // cout << "接收到logoutResult:" << logoutResult->result << endl;
             break;
         }
         case CMD_NEW_USER_JOIN:
@@ -196,16 +220,20 @@ public:
             NewUserJoin* newUserJoin = NULL;
 
             newUserJoin = (NewUserJoin*)header;
-            cout << "接收到NewUserJoin:" << newUserJoin->sock << endl;
+           // cout << "接收到NewUserJoin:" << newUserJoin->sock << endl;
 
             break;
         }
         case CMD_ERROR:
         {
+            cout << "recevie cmd_error message length:" << header->dataLength<< endl;
+
             break;
         }
         default:
         {
+            cout << "receive no define message message length:" << header->dataLength<< endl;
+
             break;
         }
         }

@@ -10,13 +10,15 @@ int main()
 
 
 
+
+
     while (server1.isRun())
     {
         server1.onRun();
+
     }
 
     server1.closeSocket();
-
 
 
     std::cout<<"服务器退出"<<std::endl;

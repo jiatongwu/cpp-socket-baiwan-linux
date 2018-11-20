@@ -196,7 +196,7 @@ public:
 
 
 
-            timeval t = {1,0};
+            timeval t = {0,0};
             int ret=select(maxSock+1,&fdRead,&fdWrite,&fdExp,&t);
             if (ret < 0)
             {
@@ -240,13 +240,17 @@ public:
         return INVALID_SOCKET!=_sock;
     }
     //接收数据 处理粘包 拆分包
+     char recvBuffer[409600];
     int RECVDATA(SOCKET client_socket)
     {
-        char recvBuffer[4096];
+        //char recvBuffer[4096];
         DataHeader* header;
-
-        //5.
-        int nLen = recv(client_socket, recvBuffer, sizeof(DataHeader), 0);
+    int nLen = recv(client_socket, recvBuffer, 409600, 0);
+     //  std::cout<<"nLen:"<<nLen<<std::endl;
+       LogoutResult logoutResult;
+       sendData(client_socket,&logoutResult);
+    //5.
+        /*int nLen = recv(client_socket, recvBuffer, sizeof(DataHeader), 0);
         if (nLen <= 0)
         {
             std::cout << "接收到的数据小于等于0  "<<client_socket << " 客户端退出"<<std::endl;
@@ -256,6 +260,7 @@ public:
         recv(client_socket, recvBuffer + sizeof(DataHeader), header->dataLength - sizeof(DataHeader), 0);
         std::cout << "接收到来自： " << client_socket << "命令 cmd:" << header->cmd << " dataLength:" << header->dataLength << std::endl;
         onNetMessage( client_socket,header);
+        */
         return 0;
 
     }
