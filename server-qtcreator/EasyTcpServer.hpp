@@ -25,10 +25,45 @@
 
 #include "MessageHeader.hpp"
 using namespace std;
+#ifndef RECV_BUFFER_SIZE
+#define RECV_BUFFER_SIZE 10240
+#endif
+class ClientSocket{
+
+public:
+    ClientSocket(SOCKET clientSocket=INVALID_SOCKET)
+    {
+        this->_lastPos=clientSocket;
+        memset(this->_szMsgBuffer,0,sizeof(this->_szMsgBuffer));
+        this->_lastPos=0;
+    }
+    SOCKET getSocketFd(){
+        return _socketfd;
+    }
+    char* getMsgBuffer()
+    {
+        return _szMsgBuffer;
+    }
+    int getLastPos()
+    {
+        return _lastPos;
+    }
+    void setLastPos(int lastPos)
+    {
+      this->_lastPos=lastPos;
+    }
+     SOCKET _socketfd;
+private:
+
+    //第二缓冲区
+    char _szMsgBuffer[RECV_BUFFER_SIZE*10];
+    int _lastPos;
+
+};
 class EasyTcpServer
 {
 private:
-    std::vector<SOCKET> g_clients;
+    std::vector<ClientSocket*> g_clients;
     SOCKET _sock;
 public:
 
@@ -138,8 +173,7 @@ public:
             NewUserJoin newUserJoin;
             sendDataToAll(&newUserJoin);
 
-
-            g_clients.push_back(client_socket);
+            g_clients.push_back(new ClientSocket(client_socket));
             return client_socket;
 
         }
@@ -153,17 +187,22 @@ public:
 #ifdef _WIN32
             for (int n = (int)g_clients.size() - 1; n >= 0; n--)
             {
-                closesocket(g_clients[n]);
+                closesocket(g_clients[n]->_socketfd);
+                 delete g_clients[n];
             }
             closesocket(_sock);
             WSACleanup();
 #else
             for (int n = (int)g_clients.size() - 1; n >= 0; n--)
             {
-                close(g_clients[n]);
+
+                close(g_clients[n]->_socketfd);
+                delete g_clients[n];
+
             }
             close(_sock);
 #endif
+            g_clients.clear();
             _sock=INVALID_SOCKET;
         }
 
@@ -187,10 +226,10 @@ public:
             SOCKET maxSock=_sock;
             for (int n = (int)g_clients.size() - 1; n >= 0; n--)
             {
-                FD_SET(g_clients[n],&fdRead);
-                if(maxSock< g_clients[n])
+                FD_SET(g_clients[n]->_socketfd,&fdRead);
+                if(maxSock< g_clients[n]->_socketfd)
                 {
-                    maxSock=g_clients[n];
+                    maxSock=g_clients[n]->_socketfd;
                 }
             }
 
@@ -214,13 +253,14 @@ public:
 
             for (int n = (int)g_clients.size() - 1; n >= 0; n--)
             {
-                if (FD_ISSET(g_clients[n], &fdRead))
+                if (FD_ISSET(g_clients[n]->_socketfd, &fdRead))
                 {
-                    if (-1 == RECVDATA(g_clients[n]))
+                    if (-1 == RECVDATA(g_clients[n]->_socketfd))
                     {
                         auto iter = g_clients.begin()+n;
                         if(iter!=g_clients.end())
                         {
+                            delete g_clients[n];
                             g_clients.erase(iter);
                         }
                     }
@@ -317,7 +357,7 @@ public:
     {
         for (int n = (int)g_clients.size() - 1; n >= 0; n--)
         {
-            sendData(g_clients[n],header);
+            sendData(g_clients[n]->_socketfd,header);
         }
     }
 };
