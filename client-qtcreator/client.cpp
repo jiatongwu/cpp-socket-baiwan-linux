@@ -21,7 +21,7 @@
 using namespace std;
 #include "EasyTcpClient.hpp"
 
-void cmdThread(EasyTcpClient *client1)
+void cmdThread2(EasyTcpClient *client1)
 {
     char cmdBuffer[128];
     while (true)
@@ -67,7 +67,7 @@ void cmdThread(EasyTcpClient *client1)
 
 }
 
-int main()
+int main2()
 {
     EasyTcpClient client1;
     client1.connectServer("192.168.2.18",4567);

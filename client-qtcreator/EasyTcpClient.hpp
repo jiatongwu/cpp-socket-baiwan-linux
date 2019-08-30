@@ -255,6 +255,15 @@ public:
         return SOCKET_ERROR;
     }
 
+    int  sendData2(char* data,int len)
+    {
+
+        if(isRun() && data)
+        {
+            return send(_sock, (const char*)(data),len, 0);
+        }
+        return SOCKET_ERROR;
+    }
 
 private:
 

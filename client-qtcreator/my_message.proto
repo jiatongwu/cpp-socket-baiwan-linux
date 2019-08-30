@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+package tutorial;
+
+option java_package = "cn.xvkang.protobuf";
+option java_outer_classname = "MyMessage";
+message Data{
+enum DataType{
+OPEN =0;
+CLOSE=1; 
+}
+required DataType data_type = 1;
+oneof dataBody{
+Open openData=2;
+Close closeData=3;
+}
+
+}
+message Open {
+  optional string name = 1;
+  optional string email = 2;
+
+
+}
+  message Close {
+    optional  string number = 1;
+  }
+
