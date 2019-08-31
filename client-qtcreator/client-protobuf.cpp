@@ -77,7 +77,77 @@ void cmdThread(EasyTcpClient *client1)
 
 
 }
+void gen_random(char *s, const int len) {
+    static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
 
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    s[len] = 0;
+}
+void sendDataToServerTest(EasyTcpClient& client1){
+    tutorial::Data data{};
+    tutorial::Open* open=new tutorial::Open;
+    time_t t;
+    srand((unsigned) time(&t));
+    int lenname= rand() % 500+1;
+    char namearray[lenname];
+    gen_random(namearray,lenname);
+   // std::cout<<lenname<<std::endl;
+    std::string name(namearray);
+    open->set_name(name);
+    open->set_email("13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com");
+    tutorial::Data_DataType dataType= tutorial::Data_DataType_OPEN;
+    data.set_data_type(dataType);
+    data.set_allocated_opendata(open);
+
+    int len = data.ByteSize();
+    long totalLength=8+len;
+    char buffer[len];
+    data.SerializeToArray(buffer,len);
+
+
+    char prebyte[8];
+    int wei=56;
+    for(int i=7;i>=0;i--)
+    {
+        long long temp=totalLength<<wei;//左移到56-64位，将比它高的位丢失
+        prebyte[i]=temp>>56;//右移到1-8位，将比它低的位丢失
+        wei-=8;
+    }
+
+
+    char buffer2[totalLength];
+    buffer2[0]=prebyte[0];
+    buffer2[1]=prebyte[1];
+    buffer2[2]=prebyte[2];
+    buffer2[3]=prebyte[3];
+    buffer2[4]=prebyte[4];
+    buffer2[5]=prebyte[5];
+    buffer2[6]=prebyte[6];
+    buffer2[7]=prebyte[7];
+    // convert from an unsigned long int to a 4-byte array
+    // buffer2[4] = (int)((totalLength >> 24) & 0xFF) ;
+    //buffer2[5] = (int)((totalLength >> 16) & 0xFF) ;
+    // buffer2[6] = (int)((totalLength >> 8) & 0XFF);
+    // buffer2[7] = (int)((totalLength & 0XFF));
+    for(int i=0;i<len;i++){
+        buffer2[i+8]=buffer[i];
+    }
+
+
+
+    // google::protobuf::io::ArrayOutputStream arrayOut(buffer, len);
+    //google::protobuf::io::CodedOutputStream codedOut(&arrayOut);
+    // codedOut.WriteVarint32(data.ByteSize());
+    // data.SerializeToCodedStream(&codedOut);
+    client1.sendData2(buffer2,totalLength);
+
+}
 int main()
 {
     EasyTcpClient client1;
@@ -95,10 +165,17 @@ int main()
     //Logout logout;
     // strcpy(logout.username, "wu");
 
-    while(1==1){
+ //   while(1==1){
         tutorial::Data data{};
         tutorial::Open* open=new tutorial::Open;
-        open->set_name("wuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwuwu");
+        time_t t;
+        srand((unsigned) time(&t));
+        int lenname= rand() % 500+1;
+        char namearray[lenname];
+        gen_random(namearray,lenname);
+        std::cout<<lenname<<std::endl;
+        std::string name(namearray);
+        open->set_name(name);
         open->set_email("13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com13333@qq.com");
         tutorial::Data_DataType dataType= tutorial::Data_DataType_OPEN;
         data.set_data_type(dataType);
@@ -129,29 +206,31 @@ int main()
         buffer2[5]=prebyte[5];
         buffer2[6]=prebyte[6];
         buffer2[7]=prebyte[7];
-         // convert from an unsigned long int to a 4-byte array
+        // convert from an unsigned long int to a 4-byte array
         // buffer2[4] = (int)((totalLength >> 24) & 0xFF) ;
-         //buffer2[5] = (int)((totalLength >> 16) & 0xFF) ;
+        //buffer2[5] = (int)((totalLength >> 16) & 0xFF) ;
         // buffer2[6] = (int)((totalLength >> 8) & 0XFF);
         // buffer2[7] = (int)((totalLength & 0XFF));
-         for(int i=0;i<len;i++){
-             buffer2[i+8]=buffer[i];
-         }
+        for(int i=0;i<len;i++){
+            buffer2[i+8]=buffer[i];
+        }
 
 
 
-       // google::protobuf::io::ArrayOutputStream arrayOut(buffer, len);
+        // google::protobuf::io::ArrayOutputStream arrayOut(buffer, len);
         //google::protobuf::io::CodedOutputStream codedOut(&arrayOut);
-       // codedOut.WriteVarint32(data.ByteSize());
-       // data.SerializeToCodedStream(&codedOut);
+        // codedOut.WriteVarint32(data.ByteSize());
+        // data.SerializeToCodedStream(&codedOut);
         client1.sendData2(buffer2,totalLength);
-    }
+    //}
+
 
     while (client1.isRun())
     {
+        sendDataToServerTest(client1);
         // client1.sendData(&logout);
         //client2.sendData(&logout);
-        client1.onRun();
+        client1.onRun_protobuf();
         // std::cout<<"onRun()"<<std::endl;
         // client1.sendData(&logout);
         //client2.onRun();

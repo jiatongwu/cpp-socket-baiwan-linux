@@ -12,7 +12,9 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include "my_message.pb.h"
 #define SOCKET int
+
 #define INVALID_SOCKET (SOCKET)(~0)
 #define SOCKET_ERROR (-1)
 #endif
@@ -152,6 +154,40 @@ public:
         return  false;
 
     }
+    bool onRun_protobuf()
+    {
+        if(isRun())
+        {
+
+            fd_set fdReads;
+            FD_ZERO(&fdReads);
+
+            FD_SET(_sock, &fdReads);
+            timeval t = {0,0};
+            int ret = select(_sock+1, &fdReads, NULL, NULL,&t);
+            if (ret < 0)
+            {
+                cout<<"select return <0   "<<endl;
+
+                _sock = INVALID_SOCKET;
+                return false;
+            }
+            if (FD_ISSET(_sock, &fdReads))
+            {
+                FD_CLR(_sock,&fdReads);
+                if (-1 == recvDataProtobuf())
+                {
+                    closeSocket();
+                    cout<<" 接收数据时，返回－1 "<<endl;
+                    return false;
+                }
+                return true;
+
+            }
+        }
+        return  false;
+
+    }
     //处理粘包 半包
 #define RECV_BUFFER_SIZE 10240
     //recv buffer
@@ -194,6 +230,80 @@ public:
 
         return 0;
     }
+
+
+    int recvDataProtobuf()
+    {
+
+        // DataHeader* header;
+        //copy recv buffer to message buffer
+        int nLen = recv(_sock, _recvBuffer,RECV_BUFFER_SIZE, 0);
+        if (nLen <= 0)
+        {
+            cout << "接收到的数据<=0 " << endl;
+            return -1;
+        }
+
+        memcpy(_messageBuffer+_lastPos,_recvBuffer,nLen);
+        _lastPos+=nLen;
+
+        //test message buffer while has a message enough
+        while(_lastPos>=8)
+        {
+
+            char ch[8]={_messageBuffer[7],_messageBuffer[6],_messageBuffer[5],_messageBuffer[4],_messageBuffer[3],_messageBuffer[2],_messageBuffer[1],_messageBuffer[0]};
+            long* addrpoint=( long*)(&(ch[0]));
+            long addr=*addrpoint;
+
+
+
+
+
+            if(_lastPos>=(addr))
+            {
+                // process the enough message and change new message buffer and _lastPos
+                int newLastPos=_lastPos-(addr);
+                //onNetMessage(dataHeader);
+                char data[addr-8];
+                memcpy(data,_messageBuffer+8,addr-8);
+                onNetMessage_protobuf(data,addr);
+                memcpy(_messageBuffer,_messageBuffer+addr,newLastPos);
+                _lastPos=newLastPos;
+            }else
+            {
+                break;
+            }
+        }
+
+
+
+        return 0;
+    }
+    void onNetMessage_protobuf(char* bytes,long len)
+    {/*
+        tutorial::Data data;
+        data.ParseFromArray((const void*)bytes,len);
+        tutorial::Data_DataType dataType=data.data_type();
+        switch(dataType){
+        case tutorial::Data_DataType::Data_DataType_OPEN:
+        {
+            tutorial::Open open=data.opendata();
+            string name= open.name();
+            string email=open.email();
+           // std::cout<<"open name:"<<name<<",email:"<<email<<std::endl;
+            break;
+        }
+        case tutorial::Data_DataType::Data_DataType_CLOSE:
+        {
+            tutorial::Close close=data.closedata();
+            string number= close.number();
+          //  std::cout<<"close number:"<<number<<std::endl;
+            break;
+        }
+        }*/
+
+
+    }
     void onNetMessage(DataHeader* header)
     {
 
@@ -204,7 +314,7 @@ public:
             LoginResult* loginResult=NULL;
 
             loginResult = (LoginResult*)header;
-           // cout << "接收到logoutResult: " << loginResult ->result<< endl;
+            // cout << "接收到logoutResult: " << loginResult ->result<< endl;
 
             break;
         }
@@ -212,7 +322,7 @@ public:
         {
             LogoutResult* logoutResult=NULL;
             logoutResult = (LogoutResult*)header;
-           // cout << "接收到logoutResult:" << logoutResult->result << endl;
+            // cout << "接收到logoutResult:" << logoutResult->result << endl;
             break;
         }
         case CMD_NEW_USER_JOIN:
@@ -220,7 +330,7 @@ public:
             NewUserJoin* newUserJoin = NULL;
 
             newUserJoin = (NewUserJoin*)header;
-           // cout << "接收到NewUserJoin:" << newUserJoin->sock << endl;
+            // cout << "接收到NewUserJoin:" << newUserJoin->sock << endl;
 
             break;
         }
